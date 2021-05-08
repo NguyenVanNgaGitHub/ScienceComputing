@@ -4,10 +4,11 @@ import matplotlib.pyplot as plt
 import os
 
 class GifRecoder(Recorder):
-    def __init__(self, dla = None):
+    def __init__(self, dla = None, name_file=None):
         super(GifRecoder, self).__init__(dla=dla)
         self.states = []
         self.count = 0
+        self.name_file = name_file
 
     def record(self):
         label = "Number particles in aggregation "+str(self.dla.num_hits)
@@ -19,7 +20,7 @@ class GifRecoder(Recorder):
 
     def export_result(self):
         self.record()
-        with imageio.get_writer('images/movie.gif', mode='I') as writer:
+        with imageio.get_writer('images/' + self.name_file + '.gif', mode='I') as writer:
             for i in range(self.count):
                 filename="images/cluster"+str(i)+".png"
                 image = imageio.imread(filename)
