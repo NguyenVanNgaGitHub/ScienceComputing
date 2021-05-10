@@ -6,7 +6,7 @@ from utils import Helper
 
 class GeneralDLA():
 
-    def __init__(self, num_particle, limit_radius, stick_distribution: StickDistribution, bias=0):
+    def __init__(self, num_particle, limit_radius, stick_distribution: StickDistribution,bias=0):
 
         self.num_particle = num_particle
         self.limit_radius = limit_radius
@@ -52,6 +52,8 @@ class GeneralDLA():
         self.particles[index][0] = x
         self.particles[index][1] = y
         dis = GeneralDLA.distance((x, y))
+
+        print('Pos in Bind ',index,x,y)
         if dis > self.radius_bounding:
             self.radius_bounding = dis
             self.radius_gen = self.radius_bounding + 4
@@ -91,19 +93,22 @@ class GeneralDLA():
             index += 1
             # Random position for particle
             x, y = self.randomGenPosition()
-            print('start x, y:', x, y)
+            #print('start x, y:', x, y)
             while not self.isBindingToAggregation(index, x, y):
                 x, y = self.diffusion(x, y)
+
+                # if index == 10:
+                #     print('Position X='+str(x)+', y = '+str(y))
                 if not self.isInSafeArea(x, y):
                     x, y = self.randomGenPosition()
             self.bindingToAggregation(index, x, y)
-            print('===========Particle:', index)
+            #print('===========Particle:', index)
 
         for index, particle in enumerate(self.particles):
             self.particles[index][0] = particle[0] + self.seed_particle_x
             self.particles[index][1] = particle[1] + self.seed_particle_y
 
-    def simulation(self, file_name):
+    def simulate(self, file_name):
         self.build()
         Helper.simulate_dla(self.particles, self.limit_radius, file_name)
 
