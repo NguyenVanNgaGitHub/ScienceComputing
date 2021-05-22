@@ -13,7 +13,7 @@ class Helper:
             x = particle[0]
             y = particle[1]
             r = particle[2]
-            print(x, y, r)
+            #print(x, y, r)
             circle = plt.Circle((x, y), r, color='r', clip_on=False)
             ax.add_patch(circle)
         ax.set_xlim((0, Configs.width_size))

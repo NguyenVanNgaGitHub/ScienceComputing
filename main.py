@@ -18,7 +18,7 @@ from GeneralDLA2 import GeneralDLA2
 Configs.direction_bias=DirectionalBias('edges')
 
 dla=GeneralDLA2()
-dla.simulate("result_general_dla")
+dla.simulate()
 
 
 

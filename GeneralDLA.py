@@ -53,7 +53,7 @@ class GeneralDLA():
         self.particles[index][1] = y
         dis = GeneralDLA.distance((x, y))
 
-        print('Pos in Bind ',index,x,y)
+        #print('Pos in Bind ',index,x,y)
         if dis > self.radius_bounding:
             self.radius_bounding = dis
             self.radius_gen = self.radius_bounding + 4

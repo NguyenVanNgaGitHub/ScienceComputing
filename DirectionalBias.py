@@ -1,6 +1,6 @@
 import math
 from abc import ABC, abstractmethod
-
+from Particle import Particle
 from Configs import Configs
 
 
@@ -13,25 +13,26 @@ class DirectionalBias():
 
         for i in range(0, math.floor(Configs.height_size / Configs.radius_particle)):
             #print("Generate Wall ", main_ax, init_other_ax + Configs.radius_particle * i)
-            particles.append([main_ax, init_other_ax + Configs.radius_particle * i, Configs.radius_particle])
+            particles.append(Particle(main_ax, init_other_ax + Configs.radius_particle * i, Configs.radius_particle))
 
         return particles
 
     def createHorizontalWall(self, particles, main_ax):
         init_other_ax = -Configs.width_size / 2
-        for i in range(0,math.floor( Configs.height_size / Configs.radius_particle)):
-            particles.append([init_other_ax + Configs.radius_particle * i, main_ax, Configs.radius_particle])
+        for i in range(0,math.floor( Configs.width_size / Configs.radius_particle)):
+            particles.append(Particle(init_other_ax + Configs.radius_particle * i, main_ax, Configs.radius_particle))
 
         return particles
 
     def getTowardCenterForce(self, x, y):
         angle_rad = math.atan2(float(-y), float(-x))
         #print("angle_rad ",math.degrees(angle_rad))
-        #rint("angle_rad Cos",math.cos(angle_rad))
+        #print("angle_rad Cos",math.cos(angle_rad))
         return math.cos(angle_rad) * Configs.force_bias, math.sin(angle_rad) * Configs.force_bias
 
 
-    def addBiasForce(self, x, y):
+    def addBiasForce(self, walker):
+        x,y=walker.x,walker.y
         if self.value == 'left':
             return x-Configs.force_bias,y
         elif self.value == 'right':
@@ -58,7 +59,8 @@ class DirectionalBias():
             return x - dx, y - dy
 
 
-    def initCluster(self, particles):
+    def initCluster(self):
+        particles=[]
         if self.value == 'left':
             particles = self.createVerticalWall(particles,main_ax=-Configs.width_size/2)
         elif self.value == 'right':
@@ -72,7 +74,7 @@ class DirectionalBias():
         elif self.value == 'meridian':
             particles = self.createVerticalWall(particles,main_ax=0)
         elif self.value == 'center':
-            particles.append([0, 0, Configs.radius_particle])
+            particles.append(Particle(0, 0, Configs.radius_particle))
         elif self.value == 'edges':
             particles = self.createVerticalWall(particles, main_ax=Configs.width_size/2)
             particles = self.createVerticalWall(particles, main_ax=-Configs.width_size / 2)
@@ -80,7 +82,3 @@ class DirectionalBias():
             particles = self.createHorizontalWall(particles, main_ax=-Configs.height_size / 2)
         return particles
 
-
-d_bias=DirectionalBias('left')
-x,y=-1,5
-print(d_bias.addBiasForce(x,y))
