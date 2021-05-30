@@ -10,7 +10,7 @@ class GifRecoder(Recorder):
         self.count = 0
 
     def record(self):
-        label = "Number particles in aggregation "+str(self.dla.num_hits)
+        label = "Number particles "+str(self.dla.num_hits)
         plt.title(label, fontsize=20)
         plt.imshow(self.dla.surface_matrix, cmap='hot', interpolation='nearest')
         plt.savefig("images/cluster{}.png".format(self.count), dpi=200)
