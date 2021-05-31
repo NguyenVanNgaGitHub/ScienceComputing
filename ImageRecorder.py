@@ -9,7 +9,7 @@ class ImageRecoder(Recorder):
         pass
 
     def export_result(self):
-        label = "Final state: Number particles in aggregation " + str(self.dla.num_hits)
+        label = "Final state: "+ str(self.dla.num_hits)+" particles in aggregation "
         plt.title(label, fontsize=20)
         plt.imshow(self.dla.surface_matrix, cmap='hot', interpolation='nearest')
         plt.savefig("images/final_result.png", dpi=200)
