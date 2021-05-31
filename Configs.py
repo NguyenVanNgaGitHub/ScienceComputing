@@ -3,22 +3,21 @@ from ConstantStickDistribution import ConstantStickDistribution
 
 class Configs:
     # Window Size
-    width_size=200
-    height_size=200
+    window_size=100
+
+    figure_size=5
 
     # Number of particles (exclude particle on original cluster)
-    num_particles=500
+    num_particles=1000
 
-    num_walkers=100
-
-    # Radius of particle
     radius_particle=1
+    num_walkers=50
 
     # Length per step
-    force_bias=2
+    force_bias=1
 
-    # From to 0% to 100%
-    delta_distance_percentage=10
+    add_cluster_toward_force = False
+    color_num = 5
 
     # Distribution determine probability stick when a walker collide a particle on cluster
     distribution=ConstantStickDistribution(proba=0.6)
@@ -29,3 +28,5 @@ class Configs:
 
     # File show result
     file_name="demo"
+
+    enable_log= True

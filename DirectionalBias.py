@@ -9,29 +9,26 @@ class DirectionalBias():
         self.value = value
 
     def createVerticalWall(self, particles, main_ax):
-        init_other_ax = -Configs.height_size / 2
 
-        for i in range(0, math.floor(Configs.height_size / Configs.radius_particle)):
-            #print("Generate Wall ", main_ax, init_other_ax + Configs.radius_particle * i)
-            particles.append(Particle(main_ax, init_other_ax + Configs.radius_particle * i, Configs.radius_particle))
+        for i in range(Configs.window_size):
+            particles.append(Particle(main_ax, i, Configs.radius_particle))
 
         return particles
 
     def createHorizontalWall(self, particles, main_ax):
-        init_other_ax = -Configs.width_size / 2
-        for i in range(0,math.floor( Configs.width_size / Configs.radius_particle)):
-            particles.append(Particle(init_other_ax + Configs.radius_particle * i, main_ax, Configs.radius_particle))
+        for i in range(Configs.window_size):
+            particles.append(Particle(i, main_ax, Configs.radius_particle))
 
         return particles
 
     def getTowardCenterForce(self, x, y):
-        angle_rad = math.atan2(float(-y), float(-x))
-        #print("angle_rad ",math.degrees(angle_rad))
-        #print("angle_rad Cos",math.cos(angle_rad))
+        angle_rad = math.atan2(float(int(Configs.window_size/2)-y), float(int(Configs.window_size/2)-x))
         return math.cos(angle_rad) * Configs.force_bias, math.sin(angle_rad) * Configs.force_bias
 
 
     def addBiasForce(self, walker):
+        if Configs.add_cluster_toward_force == False :
+            return  walker.x,walker.y
         x,y=walker.x,walker.y
         if self.value == 'left':
             return x-Configs.force_bias,y
@@ -53,32 +50,32 @@ class DirectionalBias():
                 return x + Configs.force_bias,y
         elif self.value == 'center':
             dx, dy = self.getTowardCenterForce(x, y)
-            return x + dx, y + dy
+            return round(x + dx),round( y + dy)
         elif self.value == 'edges':
             dx, dy = self.getTowardCenterForce(x, y)
-            return x - dx, y - dy
+            return round(x - dx), round(y - dy)
 
 
     def initCluster(self):
         particles=[]
         if self.value == 'left':
-            particles = self.createVerticalWall(particles,main_ax=-Configs.width_size/2)
-        elif self.value == 'right':
-            particles = self.createVerticalWall(particles,main_ax=Configs.width_size/2)
-        elif self.value == 'bottom':
-            particles = self.createHorizontalWall(particles,main_ax=-Configs.height_size/2)
-        elif self.value == 'top':
-            particles = self.createHorizontalWall(particles,main_ax=Configs.height_size/2)
-        elif self.value == 'equator':
-            particles = self.createHorizontalWall(particles,main_ax=0)
-        elif self.value == 'meridian':
             particles = self.createVerticalWall(particles,main_ax=0)
+        elif self.value == 'right':
+            particles = self.createVerticalWall(particles,main_ax=Configs.window_size-1)
+        elif self.value == 'bottom':
+            particles = self.createHorizontalWall(particles,main_ax=0)
+        elif self.value == 'top':
+            particles = self.createHorizontalWall(particles,main_ax=Configs.window_size-1)
+        elif self.value == 'equator':
+            particles = self.createHorizontalWall(particles,main_ax=int(Configs.window_size/2))
+        elif self.value == 'meridian':
+            particles = self.createVerticalWall(particles,main_ax=int(Configs.window_size/2))
         elif self.value == 'center':
-            particles.append(Particle(0, 0, Configs.radius_particle))
+            particles.append(Particle(int(Configs.window_size/2), int(Configs.window_size/2), Configs.radius_particle))
         elif self.value == 'edges':
-            particles = self.createVerticalWall(particles, main_ax=Configs.width_size/2)
-            particles = self.createVerticalWall(particles, main_ax=-Configs.width_size / 2)
-            particles = self.createHorizontalWall(particles, main_ax=Configs.height_size / 2)
-            particles = self.createHorizontalWall(particles, main_ax=-Configs.height_size / 2)
+            particles = self.createVerticalWall(particles, main_ax=Configs.window_size-1)
+            particles = self.createVerticalWall(particles, main_ax=0)
+            particles = self.createHorizontalWall(particles, main_ax=Configs.window_size-1)
+            particles = self.createHorizontalWall(particles, main_ax=0)
         return particles
 

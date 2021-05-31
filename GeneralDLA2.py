@@ -1,35 +1,49 @@
-import math
-
 import numpy as np
 import random as random
 from math import pi, cos, sin, sqrt
 
-from DirectionalBias import DirectionalBias
 from Particle import Particle
 from Configs import Configs
-from utils import Helper
-import matplotlib.pyplot as plt
-
-from IPython import display
-from time import sleep
 
 
 class GeneralDLA2():
     def __init__(self):
-
-        self.particles = Configs.direction_bias.initCluster()
-        self.init_num_particles = len(self.particles)
-        self.delta_distance = Configs.delta_distance_percentage / 100 * Configs.radius_particle
-
-        #print("Init Particles",self.init_num_particles)
-        #print("Delta Distance",self.delta_distance)
+        self.initSurfaceMatrix()
+        self.directions = [[-1, -1], [-1, 0], [-1, 1], [0, -1],[0, 1], [1, -1], [1, 0], [1, 1]]
         self.bias = 0
 
         self.walkers = [];
 
+    def transformValue(self):
+        return  int((Configs.num_particles-self.sticked_num)/(Configs.num_particles/Configs.color_num)+1)
+
+    def initSurfaceMatrix(self):
+        self.surface_matrix = np.zeros((Configs.window_size , Configs.window_size), dtype=np.int32)
+        self.empty_cells = []
+        for i in range(Configs.window_size):
+            for j in range(Configs.window_size):
+                self.empty_cells.append([i,j]);
+
+        arr = Configs.direction_bias.initCluster()
+        self.sticked_num = 0;
+        for p in arr:
+            self.surface_matrix[p.x][p.y] = self.transformValue();
+            #print("Value cell ",self.surface_matrix[p.x][p.y])
+            #print("Remove empty cells :",p.x,p.y)
+            if [p.x,p.y] in self.empty_cells:
+                self.empty_cells.remove([p.x,p.y])
+
+
     def recoveryWalkers(self):
-        while len(self.walkers) < Configs.num_walkers:
-            self.walkers.append(self.generateWalker())
+        walker_num=len(self.walkers)
+        while walker_num < Configs.num_walkers:
+            walker = self.generateWalker()
+            self.walkers.append(walker)
+            walker_num =walker_num+1
+
+    def generateWalker(self):
+        cell = random.choice(self.empty_cells)
+        return Particle(cell[0], cell[1], Configs.radius_particle)
 
     @staticmethod
     def distance(pos1: (int, int), pos2: (int, int) = None) -> float:
@@ -44,8 +58,9 @@ class GeneralDLA2():
     def diffusion(self, walker):
         # Implementation for random walker
         angle = random.random() * 2 * pi
-        dx = Configs.force_bias * cos(angle)
-        dy = Configs.force_bias * sin(angle)
+        step_length = random.randint(1, Configs.force_bias)
+        dx = round(step_length * cos(angle))
+        dy = round(step_length * sin(angle))
         walker.x = walker.x + dx
         walker.y = walker.y + dy
         x, y = Configs.direction_bias.addBiasForce(walker)
@@ -53,95 +68,77 @@ class GeneralDLA2():
         walker.x = x
         walker.y = y
         return walker
-        # if self.bias == 0:
-        #     return x + dx, y + dx
-        # else:
-        #     dis = GeneralDLA2.distance((x, y))
-        #     new_x = x + dx - self.bias * x / dis
-        #     new_y = y + dy - self.bias * y / dis
-        #     return new_x, new_y
 
     def bindingToAggregation(self, walker):
-        self.particles.append(walker)
-        # print("Binding Particle ",len(self.particles)-self.init_num_particles)
+        self.surface_matrix[walker.x][walker.y] = self.transformValue();
+        #print("Value cell ",self.surface_matrix[walker.x][walker.y])
+        self.sticked_num = self.sticked_num + 1
+        self.walkers.remove(walker)
 
-    def generateWalker(self):
-        # random_radius = random.randrange(self.gen+1, self.radius_kill)
-        x = random.random() * Configs.width_size - Configs.width_size / 2
-        y = random.random() * Configs.height_size - Configs.height_size / 2
+        if [walker.x,walker.y] in self.empty_cells:
+            self.empty_cells.remove([walker.x,walker.y])
 
-        return Particle(x, y, Configs.radius_particle)
 
-    def isCollideAggregation(self, walker):
-        max_delta_distance = 0
-        is_exist_collide=False
-        for particle in self.particles:
-            dx = walker.x - particle.x
-            dy = walker.y - particle.y
-            dis = GeneralDLA2.distance((dx, dy))
-
-            p = Configs.radius_particle * 2 - dis
-            if p >= 0:
-                is_exist_collide=True
-                if max_delta_distance <= p:
-                    max_delta_distance = p
-        if is_exist_collide:
-            if max_delta_distance <= self.delta_distance:
-                #print("Max_delta_distance",max_delta_distance)
-                return True,True
-            return True,False
-        return False,False
+    def isContactAggregation(self, walker):
+        for dir in self.directions:
+            tx = walker.x + dir[0]
+            ty = walker.y + dir[1]
+            if self.isInSafeArea(tx, ty):
+                if self.surface_matrix[tx][ty] > 0:
+                    return True
+        return False
 
     def isBindAggregation(self, walker):
         return Configs.distribution.can_stick((walker.x, walker.y))
 
-    def isInSafeArea(self, walker):
-        # print("Check safe area ", x, y,math.dist([x,y],[0,0]))
-        if abs(walker.x) >= Configs.width_size / 2:
+    def isInSafeArea(self, x, y):
+        # #print("Check safe area ", x, y,math.dist([x,y],[0,0]))
+        if x < 0:
             return False
-        if abs(walker.y) >= Configs.height_size / 2:
+        if x >= Configs.window_size:
+            return False
+        if y < 0:
+            return False
+        if y >= Configs.window_size:
             return False
         return True
 
     def moveWalkers(self):
-        for index, walker in enumerate(self.walkers):
-            self.walkers[index] = self.diffusion(walker)
+        for i in range(len(self.walkers)):
+            walker =self.walkers[i]
+            self.walkers[i] = self.diffusion(walker)
 
-    def pruneWalkers(self):
-        for walker in self.walkers:
-            if not self.isInSafeArea(walker):
-                # print("Before remove",len(self.walkers))
-                self.walkers.remove(walker)
-                # print("After remove",len(self.walkers))
+    def isPruned(self,walker):
+        if not self.isInSafeArea(walker.x, walker.y):
+            return True
+        elif self.surface_matrix[walker.x][walker.y] > 0 :
+            return  True
+        return  False
 
     def bindWalker(self):
         for walker in self.walkers:
-            # print('Check Bind ',walker)
-            is_collide,is_safe_distance= self.isCollideAggregation(walker)
-            if is_collide:
-                if is_safe_distance:
+            if self.isPruned(walker):
+                self.walkers.remove(walker)
+            else:
+                if self.isContactAggregation(walker):
+                    # print("Collide Detect")
                     if self.isBindAggregation(walker):
                         self.bindingToAggregation(walker)
-                        self.walkers.remove(walker)
-                else:
-                    self.walkers.remove(walker)
 
     def getRealBindedParticles(self):
-        return len(self.particles) - self.init_num_particles
+        return self.sticked_num
 
     def simulate(self):
         while self.getRealBindedParticles() <= Configs.num_particles:
-            #print("Start ",self.getRealBindedParticles())
-            #print("To ",Configs.num_particles)
+            #print("Start ",self.getRealBindedParticles(),"   ,To ",Configs.num_particles)
             self.iterate()
 
     def iterate(self):
-        self.recoveryWalkers();
+        self.recoveryWalkers()
         self.moveWalkers()
-        self.pruneWalkers()
         self.bindWalker()
 
-# Configs.direction_bias=DirectionalBias('edges')
+# Configs.direction_bias=DirectionalBias('center')
 # Configs.distribution
 # dla=GeneralDLA2()
 # dla.simulate()
